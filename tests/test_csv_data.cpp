@@ -22,7 +22,7 @@ template <typename T> void print_2d(T seq) {
 }
 
 
-void test_of_init() {
+void test_of_init_1() {
     // Does CSVData initializing correctly?
 
     CSVData data({{"message", 0}}, {{"text"}});
@@ -32,7 +32,19 @@ void test_of_init() {
 }
 
 
-void test_column() {
+void test_of_init_2() {
+    // Does invalid initialization check works?
+
+    bool bad = false;
+    try {CSVData data({{"message", 0}}, {{"text", "2"}}); bad = true;} catch (std::invalid_argument) {}
+    try {CSVData data({{"message", 0}, {"2", 1}}, {{"text"}}); bad = true;} catch (std::invalid_argument) {}
+
+    if (bad)
+        throw std::logic_error(".delete_row() doesn't prohibit deletion of a non-existing row.");
+}
+
+
+void test_column_1() {
     // Does .column() return references to the original objects from given column?
 
     CSVData data({{"message", 0}, {"thing", 1}}, {{"text1", "text2"}, {"text3", "text4"}});
@@ -45,6 +57,23 @@ void test_column() {
     if (data.values[0][1] != "Changed text." || data.values[1][1] != "Changed text.") {
         throw std::logic_error("Iterator doesn't provide direct references.");
     }
+}
+
+
+void test_column_2() {
+    // Second part of tests of .column().
+
+    CSVData data({{"message", 0}, {"thing", 1}}, {{"text1", "text2"}, {"text3", "text4"}});
+
+    bool bad = false;
+    try {data.column("asdasdadwe"); bad = true;} catch (std::invalid_argument) {}
+
+    if (bad)
+        throw std::logic_error(".column() takes a non-existing column name.");
+
+    if (data.column("message")[1] != "text3")
+        throw std::logic_error(".column()[] doesn't return the right value.");
+
 }
 
 
@@ -82,6 +111,18 @@ void test_delete_row_2() {
 
 void test_delete_row_3() {
     // What happens if you try to delete a non-existing row?
+
+    CSVData data({{"message", 0}, {"number", 1}}, {{"text1", "number1"}, {"text2", "number2"}});
+
+    bool bad = false;
+    try {data.delete_row(2); bad = true;} catch (std::invalid_argument) {}
+    try {data.delete_row(-1); bad = true;} catch (std::invalid_argument) {}
+    try {data.delete_row(0, 3); bad = true;} catch (std::invalid_argument) {}
+    try {data.delete_row(-1, 3); bad = true;} catch (std::invalid_argument) {}
+    //print_2d(data);
+
+    if (bad)
+        throw std::logic_error(".delete_row() doesn't prohibit deletion of a non-existing row.");
 }
 
 
@@ -125,8 +166,22 @@ void test_add_row_2() {
 }
 
 
-void test_insert_row() {
-    // Test of all variants of .insert_row().
+void test_add_row_3() {
+    // Test of inavlid uses of .add_row().
+
+    CSVData data({{"message", 0}, {"number", 1}, {"3", 2}}, {{"text1", "number1", "1"}, {"text2", "number2", "2"}});
+
+    bool bad = false;
+    try {data.add_row(1, {"4", "2"});; bad = true;} catch (std::invalid_argument) {}
+    try {data.add_row(3, {"4", "2", "1", "1", "1"});; bad = true;} catch (std::invalid_argument) {}
+
+    if (bad)
+        throw std::logic_error(".add_row() doesn't prohibit addition of invalid row.");
+}
+
+
+void test_insert_row_1() {
+    // Test of all valid variants of .insert_row() use.
 
     CSVData::vector_s first = {"1", "2", "3", "4"}, last = {"56", "23", "34", "54"};
     std::vector<std::string> row = {"4", "3", "2", "1"};
@@ -147,6 +202,23 @@ void test_insert_row() {
         data.values[4] != row || data.values[5] != row || data.values[6] != row ||
         data.values[7] != CSVData::vector_s{"4", "21", "53", "24"} || data.values[8] != row
     ) throw std::logic_error(".insert_row() isn't working right.");
+}
+
+
+void test_insert_row_2() {
+    // Test of inavlid use of .insert_row().
+
+    CSVData data({{"message", 0}, {"number", 1}, {"3", 2}}, {{"text1", "number1", "1"}, {"text2", "number2", "2"}});
+
+    bool bad = false;
+    try {data.insert_row(2); bad = true;} catch (std::invalid_argument) {}
+    try {data.insert_row(2, 3); bad = true;} catch (std::invalid_argument) {}
+    try {data.insert_row(1, {"invalid", "number"}); bad = true;} catch (std::invalid_argument) {}
+    try {data.insert_row(1, {"bigger", "and", "invalid", "number"}, 2); bad = true;} catch (std::invalid_argument) {}
+    try {data.insert_row(1, {{"valid", "elements", "number"}, {"invalid", "number"}}); bad = true;} catch (std::invalid_argument) {}
+
+    if (bad)
+        throw std::logic_error(".insert_row() doesn't prohibit insertion to a non-existing index and insertion of invalid row.");
 }
 
 
@@ -196,9 +268,11 @@ void test_delete_column() {
 int main() {
     // Runs all tests. If terminates without exceptions - everything good.
 
-    test_of_init();
+    test_of_init_1();
+    test_of_init_2();
 
-    test_column();
+    test_column_1();
+    test_column_2();
 
     test_delete_row_1();
     test_delete_row_2();
@@ -206,8 +280,10 @@ int main() {
 
     test_add_row_1();
     test_add_row_2();
+    test_add_row_3();
 
-    test_insert_row();
+    test_insert_row_1();
+    test_insert_row_2();
 
     test_add_column();
 

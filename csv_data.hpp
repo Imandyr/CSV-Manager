@@ -92,6 +92,11 @@ public:
             // Returns ColumnIterator on the end of a values vector.
             return ColumnIterator(target->end(), column_index);
         }
+
+        ColumnIterator::value_type& operator[](index_type index) {
+            // Returns a reference to the element on a given index from the column.
+            return (*target)[index][column_index];
+        }
     };
 
 
@@ -105,7 +110,11 @@ public:
 
     CSVData(u_map_s_st c_i = {}, vector_v_s v = {}) {
         // Initialization from column table and vector with values.
+
         column_index = c_i;
+
+        is_sequence_of_rows_valid(v);
+
         values = v;
     }
 
@@ -123,16 +132,28 @@ public:
 
     Column column(std::string name) {
         // Creates Column object of column with target name.
+        is_column_not_exist(name);
         return Column(&values, column_index[name]);
     }
 
 
     void delete_row(index_type index) {
-        // Deletes row on given index.
+        // Deletes row on given index. Raises std::invalid_argument if the row index is out of bounds.
+
+        is_row_index_valid(index);
+
         values.erase(values.begin() + index);
     }
+
     void delete_row(index_type from, index_type number) {
-        // Deletes number of rows after "from" index (including "from").
+        // Deletes number of rows after "from" index (including "from"). Raises std::invalid_argument if the row indexes is out of bounds.
+
+        is_row_index_valid(from);
+
+        if (from + number > values.size())
+            throw std::invalid_argument("Invalid row deletion range between \"" + std::to_string(from) +
+                                        "\" and \"" + std::to_string(from) + " + " + std::to_string(number) + "\".");
+
         auto start = values.begin() + from;
         values.erase(start, start + number);
     }
@@ -140,35 +161,46 @@ public:
 
     void add_row(index_type number) {
         // Adds "number" blank rows at the end of the values vector.
+
         vector_s blank(column_index.size(), "");
+
         for (index_type i = 0; i < number; ++i)
             values.push_back(blank);
     }
-    void add_row(index_type number, vector_s row) {
+
+    void add_row(index_type number, const vector_s& row) {
         // Adds "number" rows with value "row" at the end of the values vector.
+        is_row_valid(row);
+
+
         for (index_type i = 0; i < number; ++i)
             values.push_back(row);
     }
 
 
-    void insert_row(index_type to) {
-        // Inserts blank row on index before "to".
-        values.insert(values.begin() + to, vector_s(column_index.size(), ""));
-    }
-    void insert_row(index_type to, index_type number) {
+    void insert_row(index_type to, index_type number = 1) {
         // Inserts number of blank rows on index before "to".
+
+        is_row_index_valid(to);
+
         values.insert(values.begin() + to, number, vector_s(column_index.size(), ""));
     }
-    void insert_row(index_type to, vector_s row) {
-        // Inserts row with given value on index before "to".
-        values.insert(values.begin() + to, row);
-    }
-    void insert_row(index_type to, vector_s row, index_type number) {
+
+    void insert_row(index_type to, const vector_s& row, index_type number = 1) {
         // Inserts number of rows with given value on index before "to".
+
+        is_row_index_valid(to);
+        is_row_valid(row);
+
         values.insert(values.begin() + to, number, row);
     }
-    void insert_row(index_type to, std::initializer_list<vector_s> rows) {
+
+    void insert_row(index_type to, const std::initializer_list<vector_s>& rows) {
         // Inserts rows on index of "to".
+
+        is_row_index_valid(to);
+        is_sequence_of_rows_valid(rows);
+
         values.insert(values.begin() + to, rows);
     }
 
@@ -177,8 +209,7 @@ public:
         // Adds a column at the end with the name "name" and appends the value to every row, so a number of columns and elements matches.
         // Raises std::invalid_argument if the column name is already exist.
 
-        if (column_index.find(name) != column_index.end())
-            throw std::invalid_argument("A column with name \"" + name + "\" already exists.");
+        is_column_already_exist(name);
 
         column_index[name] = column_index.size();
         for (auto &i : values)
@@ -189,8 +220,7 @@ public:
     void delete_column(std::string name) {
         // Deletes column and all its values. Raises std::invalid_argument if there is no such column.
 
-        if (column_index.find(name) == column_index.end())
-            throw std::invalid_argument("A column with name \"" + name + "\" doesn't exists.");
+        is_column_not_exist(name);
 
         auto index = column_index[name];
         column_index.erase(name);
@@ -202,6 +232,38 @@ public:
 
 
 private:
+
+     void is_row_valid(const vector_s& row) {
+         // Tests if a given row is valid in the current context. Throws std::invalid_argument if invalid.
+         auto size = row.size();
+         if (size != column_index.size())
+             throw std::invalid_argument("The row size \"" + std::to_string(size) + "\" is invalid.");
+    }
+
+    template <typename T> void is_sequence_of_rows_valid(const T& sequence) {
+        // Checks if all rows in a sequence of rows are valid. Throws std::invalid_argument if not.
+        for (auto i : sequence) is_row_valid(i);
+    }
+
+    void is_column_already_exist(std::string name) {
+        // Checks if this column name is already in use.
+        if (column_index.find(name) != column_index.end())
+            throw std::invalid_argument("A column with name \"" + name + "\" already exists.");
+    }
+
+    void is_column_not_exist(std::string name) {
+        // Checks if this column name is not exist.
+        if (column_index.find(name) == column_index.end())
+            throw std::invalid_argument("A column with name \"" + name + "\" doesn't exists.");
+    }
+
+    void is_row_index_valid(index_type index) {
+        // Checks if given row index valid.
+        if (index >= values.size())
+            throw std::invalid_argument("There is no row with index \"" + std::to_string(index) + "\".");
+
+    }
+
 
 };
 
