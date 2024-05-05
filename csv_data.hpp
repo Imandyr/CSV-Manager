@@ -1,3 +1,5 @@
+// Header with CSVData class.
+
 #ifndef CSV_MANAGER_CSV_DATA
 #define CSV_MANAGER_CSV_DATA
 
@@ -100,7 +102,7 @@ public:
     };
 
 
-    // CSVData class definition.
+    // CSVData class attributes and methods.
 
 
     // Table with column names and thier indexes in vector.
@@ -108,7 +110,8 @@ public:
     // Vector with all data.
     vector_v_s values;
 
-    CSVData(u_map_s_st c_i = {}, vector_v_s v = {}) {
+
+    CSVData(const u_map_s_st& c_i = {}, const vector_v_s& v = {}) {
         // Initialization from column table and vector with values.
 
         column_index = c_i;
@@ -116,6 +119,15 @@ public:
         is_sequence_of_rows_valid(v);
 
         values = v;
+    }
+
+
+    Column column(std::string name) {
+        // Creates Column object of column with target name.
+
+        is_column_not_exist(name);
+
+        return Column(&values, column_index[name]);
     }
 
 
@@ -128,24 +140,30 @@ public:
     vector_s operator[](index_type index) {
         return values[index];
     }
-
-
-    Column column(std::string name) {
-        // Creates Column object of column with target name.
-        is_column_not_exist(name);
-        return Column(&values, column_index[name]);
+    Column operator[](std::string name) {
+        return column(name);
     }
 
 
-    void delete_row(index_type index) {
+    u_map_s_st::size_type columns_number() {
+        return column_index.size();
+    }
+    index_type rows_number() {
+        return values.size();
+    }
+
+
+    CSVData& delete_row(index_type index) {
         // Deletes row on given index. Raises std::invalid_argument if the row index is out of bounds.
 
         is_row_index_valid(index);
 
         values.erase(values.begin() + index);
+
+        return *this;
     }
 
-    void delete_row(index_type from, index_type number) {
+    CSVData& delete_row(index_type from, index_type number) {
         // Deletes number of rows after "from" index (including "from"). Raises std::invalid_argument if the row indexes is out of bounds.
 
         is_row_index_valid(from);
@@ -156,68 +174,98 @@ public:
 
         auto start = values.begin() + from;
         values.erase(start, start + number);
+
+        return *this;
     }
 
 
-    void add_row(index_type number) {
+    CSVData& add_row(index_type number) {
         // Adds "number" blank rows at the end of the values vector.
 
         vector_s blank(column_index.size(), "");
 
         for (index_type i = 0; i < number; ++i)
             values.push_back(blank);
+
+        return *this;
     }
 
-    void add_row(index_type number, const vector_s& row) {
+    CSVData& add_row(const vector_s& row) {
+        // Adds "row" at the end of the values vector.
+        is_row_valid(row);
+
+        values.push_back(row);
+
+        return *this;
+    }
+
+    CSVData& add_row(const vector_s& row, index_type number) {
         // Adds "number" rows with value "row" at the end of the values vector.
         is_row_valid(row);
 
-
         for (index_type i = 0; i < number; ++i)
             values.push_back(row);
+
+        return *this;
+    }
+
+    CSVData& add_row(const std::initializer_list<vector_s>& rows) {
+        // Adds rows from list of rows to the end of the values vector.
+        is_sequence_of_rows_valid(rows);
+
+        for (auto& row : rows)
+            values.push_back(row);
+
+        return *this;
     }
 
 
-    void insert_row(index_type to, index_type number = 1) {
+    CSVData& insert_row(index_type to, index_type number = 1) {
         // Inserts number of blank rows on index before "to".
 
         is_row_index_valid(to);
 
         values.insert(values.begin() + to, number, vector_s(column_index.size(), ""));
+
+        return *this;
     }
 
-    void insert_row(index_type to, const vector_s& row, index_type number = 1) {
+    CSVData& insert_row(index_type to, const vector_s& row, index_type number = 1) {
         // Inserts number of rows with given value on index before "to".
 
         is_row_index_valid(to);
         is_row_valid(row);
 
         values.insert(values.begin() + to, number, row);
+
+        return *this;
     }
 
-    void insert_row(index_type to, const std::initializer_list<vector_s>& rows) {
+    CSVData& insert_row(index_type to, const std::initializer_list<vector_s>& rows) {
         // Inserts rows on index of "to".
 
         is_row_index_valid(to);
         is_sequence_of_rows_valid(rows);
 
         values.insert(values.begin() + to, rows);
+
+        return *this;
     }
 
 
-    void add_column(std::string name, std::string value = "") {
+    CSVData& add_column(std::string name, std::string value = "") {
         // Adds a column at the end with the name "name" and appends the value to every row, so a number of columns and elements matches.
         // Raises std::invalid_argument if the column name is already exist.
 
         is_column_already_exist(name);
 
-        column_index[name] = column_index.size();
-        for (auto &i : values)
-            i.push_back(value);
+        _add_column(name, value);
+
+        return *this;
     }
 
 
-    void delete_column(std::string name) {
+    CSVData& delete_column(std::string name) {
         // Deletes column and all its values. Raises std::invalid_argument if there is no such column.
 
         is_column_not_exist(name);
@@ -227,11 +275,34 @@ public:
 
         for (auto &i : values)
             i.erase(i.begin() + index);
+
+        return *this;
+    }
+
+
+    CSVData& clear() {
+        // Deletes all rows and columns. It may invalidate references, pointers, and iterators referring to deleted elements.
+
+        values.clear();
+        column_index.clear();
+
+        return *this;
     }
 
 
 
 private:
+
+    // Some hidden versions of methods.
+
+    void _add_column(std::string name, std::string value = "") {
+        // Adds a new column and expands every row with the value.
+        column_index[name] = column_index.size();
+        for (auto &i : values)
+            i.push_back(value);
+    }
+
+    // Methods for data validation.
 
      void is_row_valid(const vector_s& row) {
          // Tests if a given row is valid in the current context. Throws std::invalid_argument if invalid.
@@ -242,13 +313,18 @@ private:
 
     template <typename T> void is_sequence_of_rows_valid(const T& sequence) {
         // Checks if all rows in a sequence of rows are valid. Throws std::invalid_argument if not.
-        for (auto i : sequence) is_row_valid(i);
+        for (auto& i : sequence) is_row_valid(i);
     }
 
     void is_column_already_exist(std::string name) {
         // Checks if this column name is already in use.
         if (column_index.find(name) != column_index.end())
             throw std::invalid_argument("A column with name \"" + name + "\" already exists.");
+    }
+
+    template <typename T> void is_any_column_already_exist(const T& sequence) {
+        // Checks if any of column names are already in use.
+        for (auto i : sequence) is_column_already_exist(i);
     }
 
     void is_column_not_exist(std::string name) {
