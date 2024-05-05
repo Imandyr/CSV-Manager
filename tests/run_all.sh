@@ -4,11 +4,13 @@
 
 tests="test_csv_data test_csv_read"
 
+dir="$(dirname "$0")"
+
 echo "CSV Manager tests:"
 
 for i in $tests; do
     printf "    ${i}: "
-    dir="$(dirname "$0")"
-    g++ "${dir}/${i}.cpp" -o "${dir}/${i}"
-    (exec "${dir}/${i}") && echo "Good" || echo "Bad"
+    path="${dir}/${i}"
+    g++ "${path}.cpp" -o "${path}"
+    (exec "${path}") && echo "Good" || echo "Bad"
 done
