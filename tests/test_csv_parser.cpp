@@ -23,7 +23,7 @@ template <typename T> void print_2d(T seq) {
 
 void test_parse_1() {
 
-    std::vector<std::string> input = {"first<|>line\"", "second<|>line\"", "third<|>line<|>some\"<|>\"text"};
+    std::vector<std::string> input = {"first<|>line\"", "second<|>line\"", "third<|>line<|>some\"\"\"<|>\"text"};
 
     CSVParser<std::vector<std::string>::iterator>::Iterator iter(input.begin(), input.end(), "<|>");
 

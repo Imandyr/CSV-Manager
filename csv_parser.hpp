@@ -69,41 +69,82 @@ public:
 
     private:
 
+        // Pointer to the current state.
+        void (Iterator::*current_state) (char) = &Iterator::normal_state;
+        // Variables.
+        std::string buffer;
+        size_type delim_count = 0;
+        char last = 0;
+        bool no_comment = true;
 
         vector_s next() {
             // Makes one iteration of the source_start content parsing and returns returns current row.
-            std::string buffer;
-            bool comment = false;
-            size_type delim_count = 0;
+
             row = {};
+            buffer = "";
+            delim_count = 0;
+            last = 0;
 
             while (source_start != source_end) {
-                for (auto i : *source_start++) {
-                    if (i == '\"') comment = !comment;
-                    else if (!comment && i == delimiter[delim_count]) {
-                        buffer += i;
-                        if (++delim_count == delimiter_size) {
-                            std::string out;
-                            for (auto begin = buffer.begin(), end = buffer.end() - delimiter_size; begin != end; ++begin)
-                                out += *begin;
-                            row.push_back(out);
-                            buffer = "";
-                            delim_count = 0;
-                        }
-                    }
-                    else buffer += i;
+                for (char i : *source_start++) {
+                    (this->*current_state)(i);
+                    last = i;
                 }
-                if (!comment) {
+
+                if (no_comment) {
                     row.push_back(buffer);
                     break;
                 }
-
             }
 
             return row;
+        }
 
+        void normal_state(char c) {
+            if (c == '\"') {
+                current_state = &Iterator::comment_double_quote_state;
+                no_comment = false;
+                return;
+            }
+
+            if (c == '\'') {
+                current_state = &Iterator::comment_single_quote_state;
+                no_comment = false;
+                return;
+            }
+
+            buffer += c;
+
+            if (c == delimiter[delim_count])
+                if (++delim_count == delimiter_size) {
+                    std::string out;
+                    for (auto begin = buffer.begin(), end = buffer.end() - delimiter_size; begin != end; ++begin)
+                        out += *begin;
+                    row.push_back(out);
+                    buffer = "";
+                    delim_count = 0;
+                }
+        }
+
+        void comment_double_quote_state(char c) {
+            if (c == '\"') {
+                current_state = &Iterator::normal_state;
+                no_comment = true;
+                return;
+            }
+            buffer += c;
 
         }
+
+        void comment_single_quote_state(char c) {
+//             if (c == '\'') {
+//                 current_state = &Iterator::normal_state;
+//                 no_comment = true;
+//                 return;
+//             }
+        }
+
+
     };
 
 
