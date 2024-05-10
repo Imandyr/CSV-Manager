@@ -111,14 +111,10 @@ public:
     vector_v_s values;
 
 
-    CSVData(const u_map_s_st& c_i = {}, const vector_v_s& v = {}) {
+    CSVData(const u_map_s_st& c_i = {}, const vector_v_s& v = {}) : column_index{c_i}, values{v} {
         // Initialization from column table and vector with values.
 
-        column_index = c_i;
-
         is_sequence_of_rows_valid(v);
-
-        values = v;
     }
 
 
