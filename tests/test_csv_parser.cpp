@@ -4,8 +4,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include "../csv_parser.hpp"
+
+
+using vector_s = std::vector<std::string>;
 
 
 template <typename T> void print_1d(T seq) {
@@ -22,19 +26,23 @@ template <typename T> void print_2d(T seq) {
 
 
 void test_parse_1() {
+    // Test with some parsing cases.
 
-    std::vector<std::string> input = {"first<|>line\"", "second<|>line\"", "third<|>line<|>some\"\"\"<|>\"text"};
+    vector_s input = {"first<|>line\"", "second<|>line\"", "third<|>line<|>some\"\"\"<|>\"text"};
+    std::vector<vector_s> target = {{"first", "linesecond<|>line"}, {"third", "line", "some\"<|>text"}};
+    std::vector<vector_s> out;
 
-    CSVParser<std::vector<std::string>::iterator>::Iterator iter(input.begin(), input.end(), "<|>");
+    CSVParser<vector_s::iterator> iter(input.begin(), input.end(), "<|>");
+    CSVParser<vector_s::iterator> end;
 
-    std::vector<std::vector<std::string>> out;
-    for (uint i = 0; i < 3; ++i)
+    while(iter != end)
         out.push_back(*iter++);
 
     print_2d(out);
+    print_2d(target);
 
-
-
+    if (out != target)
+        throw std::logic_error("The parser doesn't work right.");
 }
 
 
