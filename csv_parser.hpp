@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 
 template <typename IterStr> class CSVParser {
@@ -41,7 +42,9 @@ public:
 
     CSVParser(IterStr begin, IterStr end, std::string del = ",", char quote = '\"') : source_begin{begin}, source_end{end}, delimiter{del}, quote{quote} {
         // A normal initialization. Takes begin and end line iterators, the field delimiter, and a character that will be used as a quote.
-        // The delimiter can have a length of more than one character.
+        // The delimiter can have a length of more than one character. The quote character can't be used into the delimiter.
+        if (del.find(quote) != std::string::npos)
+            throw std::invalid_argument("The quote can't be part of the delimiter.");
     }
 
     CSVParser(bool ended = true) : ended{ended} {
@@ -61,34 +64,35 @@ public:
         return copy;
     }
 
-    vector_s operator*() {
+    vector_s operator*() const {
         // Returns current row value.
         return row;
     }
 
-    bool operator==(const CSVParser& right) {
+    operator bool() const {
+        return ended;
+    }
+
+    bool operator==(const CSVParser& right) const {
         return ended == right.ended;
     }
-    bool operator!=(const CSVParser& right) {
+    bool operator!=(const CSVParser& right) const {
         return ended != right.ended;
     }
 
 
 private:
-    // The pointer to the parser current state.
+    // The pointer to the current state of the parser.
     void (CSVParser::*current_state) (char) = &CSVParser::normal_state;
+
+    // The pointer to the enclosed state.
+    void (CSVParser::*enclosed_state_pointer) (char) = &CSVParser::enclosed_state;
 
     // The field buffer.
     std::string buffer;
 
     //The count of sequential delimiter matches.
     size_type delim_count = 0;
-
-    // Does text is currently enclosed?
-    bool enclosed = false;
-
-    // The previous processed character.
-    char previous = 0;
 
 
     void next() {
@@ -98,10 +102,10 @@ private:
         // This parser works by using different state member functions.
 
         // Reset all values.
-        row = {};
-        buffer = "";
+        current_state = &CSVParser::normal_state;
         delim_count = 0;
-        previous = 0;
+        buffer = "";
+        row = {};
 
         // While the iterator of lines is not ended.
         while (source_begin != source_end) {
@@ -109,12 +113,10 @@ private:
             for (char i : *source_begin++) {
                 // Use of the current state function on this character.
                 (this->*current_state)(i);
-                // Update of the previous character.
-                previous = i;
             }
 
             // If record has ended.
-            if (!enclosed) {
+            if (current_state != enclosed_state_pointer) {
                 // Push the content of the last field into the row and stop the execution.
                 row.push_back(buffer);
                 return;
@@ -128,7 +130,6 @@ private:
 
     void use_full_delimiter() {
         // Ends the current field and starts a new one. Should be used when the delimiter is full.
-
         std::string out;
 
         for (auto begin = buffer.begin(), end = buffer.end() - delimiter_size; begin != end; ++begin)
@@ -146,21 +147,18 @@ private:
         // Goes into the enclosed state if an enclosure has occurred.
         if (c == quote) {
             current_state = &CSVParser::enclosed_state;
-            enclosed = true;
             return;
         }
 
         // Adds a character to the filed text buffer.
         buffer += c;
 
-        // Goes into the delimiter state if this character is the first part of the delimiter, or delimiter right away if the delimiter is a one char.
+        // Goes into the delimiter state if the char is a part of the delimiter.
         if (c == delimiter[0]) {
             ++delim_count;
-            if (delim_count == delimiter_size)
-                use_full_delimiter();
-            else
-                current_state = &CSVParser::delimiter_state;
+            current_state = &CSVParser::delimiter_state;
         }
+
     }
 
 
@@ -168,55 +166,61 @@ private:
         // State that judges if this is the full delimiter or just a part of it. If yes, ends this field and starts a new one.
         // If no, then increases or resets the delimiter counter.
 
-        // Goes into the enclosed state if an enclosure has occurred.
-        if (c == quote) {
-            current_state = &CSVParser::enclosed_state;
-            enclosed = true;
-            return;
-        }
-
-        // Adds a character to the filed text buffer.
-        buffer += c;
-
-        // Increases delimiter count if this char is a part of the delimiter, else resets and goes into the normal state.
-        if (c == delimiter[delim_count])
-            ++delim_count;
-        else {
-            delim_count = 0;
-            current_state = &CSVParser::normal_state;
-        }
-
-        // Splits if full and goes into the normal state.
+        // Splits the line if the delimiter count is full and goes into the normal state.
         if (delim_count == delimiter_size) {
             use_full_delimiter();
             current_state = &CSVParser::normal_state;
+            normal_state(c);
+            return;
+        }
+
+        else {
+            // Adds a character to the filed text buffer.
+            buffer += c;
+
+            // Increases delimiter count if this char is a part of the delimiter.
+            if (c == delimiter[delim_count])
+                ++delim_count;
+
+            // else resets and goes into the normal state.
+            else {
+                delim_count = 0;
+                current_state = &CSVParser::normal_state;
+            }
         }
     }
 
 
     void enclosed_state(char c) {
         // State of character parsing when the text is currently enclosed.
+        // Goes into the quote escape state if the char is a quote, else appends it to the field buffer.
 
         if (c == quote) {
-            current_state = &CSVParser::normal_state;
-            enclosed = false;
+            current_state = &CSVParser::quote_escape_state;
             return;
         }
-
-        buffer += c;
-
+        else
+            buffer += c;
     }
 
 
-    // TO DO: An intermediate state between normal and comment, allowing to handle escaped quote inside comment.
+    void quote_escape_state(char c) {
+        // State that arises when a quote occurs inside the enclosed state.
+        // If this char is a quote too, then it's the quote escape. If not, then it's the end of an enclosure.
 
+        buffer += c;
 
+        if (c == quote)
+            current_state = &CSVParser::enclosed_state;
 
+        else if (c == delimiter[0]) {
+            ++delim_count;
+            current_state = &CSVParser::delimiter_state;
+        }
 
-
-
-
-
+        else
+            current_state = &CSVParser::normal_state;
+    }
 
 
 };
