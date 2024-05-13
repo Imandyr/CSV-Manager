@@ -19,12 +19,26 @@ void test_init_1() {
 }
 
 
+void test_line_iterator() {
+    // Test of the LineIterator work.
+
+    std::ifstream file("assets/file_2.csv");
+    CSVReader::LineIterator(file);
+
+
+
+}
+
+
 void test_extract_header() {
     // Test of the extract_header work.
 
 
 
 }
+
+
+
 
 
 int main() {

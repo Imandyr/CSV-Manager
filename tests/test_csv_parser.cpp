@@ -61,15 +61,13 @@ void test_init_1() {
 
     if (bad)
         throw std::logic_error("Parser mustn't be able to have the quote character as a part of the delimiter.");
-
-
 }
 
 
 void test_parse_1() {
     // Test with some parsing cases.
 
-    vector_s input = {"first<|>line\"", "second<|>line\"", "third<|>line<|>some\"\"\"<|>\"text"};
+    vector_s input = {"first<|>\"line", "second<|>line\"", "third<|>line<|>\"some\"\"<|>\"text"};
     std::vector<vector_s> target = {{"first", "linesecond<|>line"}, {"third", "line", "some\"<|>text"}};
     std::vector<vector_s> out;
 
@@ -201,6 +199,31 @@ void test_utf_8() {
 }
 
 
+void test_delimeter_end() {
+
+    vector_s input = {"||", "|"};
+    vector_v_s correct = {{"", "", ""}, {"", ""}};
+
+    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|");
+
+    check_correctness(parser, correct);
+
+}
+
+
+void test_middle_quote() {
+    // In CSV, enclosure works only if quote was placed at the start of a field, otherwise it's counted as a normal character.
+
+    vector_s input = {"\"enclosed\"|not \"enclosed\""};
+    vector_v_s correct = {{"enclosed", "not \"enclosed\""}};
+
+    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|");
+
+    check_correctness(parser, correct, "A quote that isn't first character doesn't work as the start of an enclosure.");
+
+}
+
+
 int main() {
 
     test_init_1();
@@ -222,6 +245,10 @@ int main() {
     test_simple();
 
     test_utf_8();
+
+    test_delimeter_end();
+
+    test_middle_quote();
 
 
     return 0;

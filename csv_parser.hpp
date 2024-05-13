@@ -83,7 +83,7 @@ public:
 
 private:
     // The pointer to the current state of the parser.
-    void (CSVParser::*current_state) (char) = &CSVParser::normal_state;
+    void (CSVParser::*current_state) (char) = &CSVParser::start_state;
 
     // The pointer to the enclosed state.
     void (CSVParser::*enclosed_state_pointer) (char) = &CSVParser::enclosed_state;
@@ -102,7 +102,7 @@ private:
         // This parser works by using different state member functions.
 
         // Reset all values.
-        current_state = &CSVParser::normal_state;
+        current_state = &CSVParser::start_state;
         delim_count = 0;
         buffer = "";
         row = {};
@@ -141,8 +141,22 @@ private:
     }
 
 
-    void normal_state(char c) {
-        // State of a character parsing when the text is not enclosed.
+    void first_delimiter_part() {
+        // What happens when the first part of the delimiter has appeared.
+        // Delimit if the delimiter is already full, and goes into the delimiter state if not yet.
+        ++delim_count;
+
+        if (delim_count == delimiter_size) {
+            use_full_delimiter();
+            current_state = &CSVParser::start_state;
+        }
+        else
+            current_state = &CSVParser::delimiter_state;
+    }
+
+
+    void start_state(char c) {
+        // State of a character parsing at the start of every new field.
 
         // Goes into the enclosed state if an enclosure has occurred.
         if (c == quote) {
@@ -153,12 +167,25 @@ private:
         // Adds a character to the filed text buffer.
         buffer += c;
 
-        // Goes into the delimiter state if the char is a part of the delimiter.
-        if (c == delimiter[0]) {
-            ++delim_count;
-            current_state = &CSVParser::delimiter_state;
-        }
+        // Goes into the delimiter state if the char is a part of the delimiter, or delimit right away.
+        if (c == delimiter[0])
+            first_delimiter_part();
 
+        // Goes into the normal state if nothing happened.
+        current_state = &CSVParser::normal_state;
+
+    }
+
+
+    void normal_state(char c) {
+        // State of a character parsing when there is nothing happening.
+
+        // Adds a character to the filed text buffer.
+        buffer += c;
+
+        // Goes into the delimiter state if the char is a part of the delimiter, or delimit right away.
+        if (c == delimiter[0])
+            first_delimiter_part();
     }
 
 
@@ -166,29 +193,19 @@ private:
         // State that judges if this is the full delimiter or just a part of it. If yes, ends this field and starts a new one.
         // If no, then increases or resets the delimiter counter.
 
-        // Splits the line if the delimiter count is full and goes into the normal state.
-        if (delim_count == delimiter_size) {
-            use_full_delimiter();
-            current_state = &CSVParser::normal_state;
-            normal_state(c);
-            return;
-        }
+        // Adds a character to the filed text buffer.
+        buffer += c;
 
+        // Increases delimiter count if this char is a part of the delimiter.
+        if (c == delimiter[delim_count])
+            first_delimiter_part();
+
+        // else resets and goes into the normal state.
         else {
-            // Adds a character to the filed text buffer.
-            buffer += c;
-
-            // Increases delimiter count if this char is a part of the delimiter.
-            if (c == delimiter[delim_count])
-                ++delim_count;
-
-            // else resets and goes into the normal state.
-            else {
-                delim_count = 0;
-                current_state = &CSVParser::normal_state;
-            }
+            delim_count = 0;
+            current_state = &CSVParser::normal_state;
         }
-    }
+}
 
 
     void enclosed_state(char c) {
@@ -213,10 +230,8 @@ private:
         if (c == quote)
             current_state = &CSVParser::enclosed_state;
 
-        else if (c == delimiter[0]) {
-            ++delim_count;
-            current_state = &CSVParser::delimiter_state;
-        }
+        else if (c == delimiter[0])
+            first_delimiter_part();
 
         else
             current_state = &CSVParser::normal_state;

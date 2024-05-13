@@ -7,27 +7,68 @@
 #include <fstream>
 
 #include "./csv_data.hpp"
+#include "./csv_parser.hpp"
 
 
 class CSVReader {
 // Reads a CSV file and extracts its data into the CSVData object.
+//
 public:
 
-
     using vector_s = std::vector<std::string>;
+    using vector_v_s = std::vector<vector_s>;
+    using size_type = vector_v_s::size_type;
 
 
-    // CSVReader class attributes and methods.
+    // Member types.
+
+
+    class LineIterator {
+    // Reads the input file stream line by line.
+    // Doesn't close it, so you should do it by yourself after.
+    public:
+        friend LineIterator;
+
+        LineIterator(std::ifstream& input) : input{input} {}
+        LineIterator() {}
+
+        std::string operator*() {
+            // Returns current line.
+            return line;
+        }
+
+        LineIterator& operator++() {
+            // Gets a new line and returns self.
+            getline(input, line);
+            return *this;
+        }
+
+        LineIterator operator++(int) {
+            // Gets a new line and returns previous self.
+            auto copy = *this;
+            getline(input, line);
+            return copy;
+        }
+
+        bool operator==(LineIterator other) {
+            return input == other.input;
+        }
+
+        bool operator!=(LineIterator other) {
+            return input != other.input;
+        }
+
+    private:
+        // The input stream.
+        std::ifstream& input;
+        // Current line of the file.
+        std::string line;
+    };
+
 
 
     // Pointer to the output CSVData object.
-    CSVData* output = nullptr;
-    // Path to the file and the separator.
-    std::string path, sep;
-    // Vector for manually entered columns names.
-    vector_s columns;
-    // Should columns be extracted from the file?
-    bool auto_columns = true;
+    CSVData* output;
 
 
     CSVReader(CSVData& output, std::string path, std::string sep = ",", vector_s columns = {}) :
@@ -44,6 +85,9 @@ public:
         if (columns.size() == 0)
             auto_columns = false;
     }
+
+
+
 
 
     CSVData& read_all() {
@@ -64,6 +108,17 @@ public:
 
         return *output;
     }
+
+
+private:
+    //
+
+    // Path to the file and the separator.
+    const std::string path, sep;
+    // Vector for manually entered columns names.
+    vector_s columns;
+    // Should columns be extracted from the file?
+    bool auto_columns = true;
 
 
     vector_s parse_line(std::string line) {
@@ -87,10 +142,6 @@ public:
 
         return out_vec;
     }
-
-
-private:
-
 
 
 
