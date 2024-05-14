@@ -23,47 +23,49 @@ public:
     // Member types.
 
 
-    class LineIterator {
-    // Reads the input file stream line by line.
-    // Doesn't close it, so you should do it by yourself after.
+    class FileIterator {
+    // Reads and iterates the input file stream line by line.
+    // Doesn't close it at the end, so you should do it yourself after.
     public:
-        friend LineIterator;
 
-        LineIterator(std::ifstream& input) : input{input} {}
-        LineIterator() {}
+        FileIterator(std::ifstream& input) : input{&input} {
+            // Creates a valid FileIterator object, that can be used to read lines.
+            ++*this;
+        }
+        FileIterator() {
+            // Creates an invalid FileIterator object, that only can be used on the right side of comparison with a valid FileIterator object.
+        }
 
         std::string operator*() {
             // Returns current line.
             return line;
         }
 
-        LineIterator& operator++() {
+        FileIterator& operator++() {
             // Gets a new line and returns self.
-            getline(input, line);
+            getline(*input, line);
             return *this;
         }
 
-        LineIterator operator++(int) {
-            // Gets a new line and returns previous self.
-            auto copy = *this;
-            getline(input, line);
-            return copy;
+        bool operator==(FileIterator other) {
+            return static_cast<bool>(*input) == static_cast<bool>(other.input);
         }
 
-        bool operator==(LineIterator other) {
-            return input == other.input;
+        bool operator!=(FileIterator other) {
+            return static_cast<bool>(*input) != static_cast<bool>(other.input);
         }
 
-        bool operator!=(LineIterator other) {
-            return input != other.input;
+        operator bool() {
+            return static_cast<bool>(*input);
         }
 
     private:
-        // The input stream.
-        std::ifstream& input;
+        // The input stream pointer.
+        std::ifstream* input = nullptr;
         // Current line of the file.
         std::string line;
     };
+
 
 
 
