@@ -7,6 +7,7 @@
 #include <string>
 
 #include "../csv_reader.hpp"
+#include "../csv_parser.hpp"
 
 
 using vector_s = std::vector<std::string>;
@@ -48,6 +49,26 @@ void test_file_iterator() {
 }
 
 
+void test_file_iterator_with_parser() {
+    // The FileIterator and CSVParser together.
+
+    vector_v_s target = {{"Line", "1"}, {"Line", "2"}, {"Line", "3"}};
+    vector_v_s output;
+
+    std::ifstream file(current_dir + "/assets/file_2.csv");
+
+    CSVReader::FileIterator begin(file), end;
+    for (auto i : CSVParser<CSVReader::FileIterator>(begin, end, " "))
+        output.push_back(i);
+
+    file.close();
+
+    if (target != output)
+        throw std::logic_error("CSVReader::FileIterator doesn't work with CSVParser.");
+
+}
+
+
 void test_extract_header() {
     // Test of the extract_header work.
 
@@ -66,6 +87,8 @@ int main() {
     test_extract_header();
 
     test_file_iterator();
+
+    test_file_iterator_with_parser();
 
     return 0;
 }

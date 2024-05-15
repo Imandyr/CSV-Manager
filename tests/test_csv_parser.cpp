@@ -34,8 +34,8 @@ void check_correctness(CSVParser<vector_s::iterator> &parser, const vector_v_s &
     // Method for comparison of the parser output and the correct one.
     vector_v_s output;
 
-    while(!++parser)
-        output.push_back(*parser);
+    for (auto i : parser)
+        output.push_back(i);
 
     if (output != correct) {
 
@@ -224,6 +224,21 @@ void test_middle_quote() {
 }
 
 
+void test_parser_reset() {
+    // CSVParser must be able to parse a source sequence multiple times.
+
+    vector_s input = {"1,2,3"};
+    vector_v_s correct = {{"1", "2", "3"}};
+
+    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+
+    check_correctness(parser, correct, "The first iteration should work correctly.");
+    check_correctness(parser, correct, "The second iteration should work correctly.");
+    check_correctness(parser, correct, "The third iteration should work correctly.");
+
+}
+
+
 int main() {
 
     test_init_1();
@@ -249,6 +264,8 @@ int main() {
     test_delimeter_end();
 
     test_middle_quote();
+
+    test_parser_reset();
 
 
     return 0;

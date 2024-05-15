@@ -47,6 +47,13 @@ public:
             return *this;
         }
 
+        FileIterator operator++(int) {
+            // Gets a new line and returns a copy of self from before it.
+            auto copy = *this;
+            getline(*input, line);
+            return copy;
+        }
+
         bool operator==(FileIterator other) {
             return static_cast<bool>(*input) == static_cast<bool>(other.input);
         }
@@ -60,13 +67,11 @@ public:
         }
 
     private:
-        // The input stream pointer.
+        // The pointer to the input stream.
         std::ifstream* input = nullptr;
         // Current line of the file.
         std::string line;
     };
-
-
 
 
     // Pointer to the output CSVData object.
@@ -74,8 +79,7 @@ public:
 
 
     CSVReader(CSVData& output, std::string path, std::string sep = ",", vector_s columns = {}) :
-        output{&output}, path{path}, sep{sep}, columns{columns}
-    {
+        output{&output}, path{path}, sep{sep}, columns{columns} {
         /* CSVReader constructor.
          * Arguments:
          *     output: The CSVData object in which data will be loaded. It'll be wiped out before reading started.
@@ -132,17 +136,7 @@ private:
     // TO DO: Make it extract columns.
     vector_s extract_header(std::string line) {
         // Parses the CSV file header into the vector with column names and returns it.
-        vector_s out_vec;
-        std::string str_buf;
-        bool quotes = false;
-
-        // TO DO: Make parsing using state design pattern.
-        for (auto i : line) {
-
-        }
-
-
-        return out_vec;
+        return {""};
     }
 
 

@@ -11,5 +11,5 @@ echo "CSV Manager tests:"
 for i in $tests; do
     printf "    ${i}: "
     path="${dir}/${i}"
-    g++ "${path}.cpp" -o "${path}" && (exec "${path}") && echo "Ok" || echo "Bad"
+    g++ "${path}.cpp" -o "${path}" -Og && (exec "${path}") && echo "Ok" || echo "Bad"
 done
