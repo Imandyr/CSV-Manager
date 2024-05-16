@@ -56,10 +56,9 @@ public:
         }
 
 
-        void reset(IterStr begin, IterStr end) {
-            // Resets parser with new iterators.
+        void reset(IterStr begin) {
+            // Resets parser with new iterator.
             source_begin = begin;
-            source_end = end;
             ended = false;
         }
 
@@ -93,6 +92,7 @@ public:
             }
 
             // If source_begin == source_end, then it is the end.
+            row.push_back(buffer);
             ended = true;
         }
 
@@ -231,14 +231,18 @@ public:
 
     public:
         Iterator(Parser& parser) : parser{&parser}{
-            // Takes Parser object which it will iterate. If nullptr given, works as an end iterator.
-            Iterator::parser->next();
+            // Takes Parser object which it will iterate. Also unends it so it would make at least one iteration.
+            ++*this;
+            parser.ended = false;
         }
-        Iterator() = default;
+        Iterator() {
+            // This works as an end iterator.
+        };
 
         Iterator& operator++() {
             // Makes one iteration and returns the reference to the self.
             parser->next();
+            row = parser->row;
             return *this;
         }
 
@@ -246,12 +250,13 @@ public:
             // Makes one iteration and returns a copy of self from before the iteration.
             auto copy = *this;
             parser->next();
+            row = parser->row;
             return copy;
         }
 
         vector_s operator*() const {
             // Returns current row value.
-            return parser->row;
+            return row;
         }
 
         operator bool() const {
@@ -268,6 +273,8 @@ public:
     private:
         // The pointer to the parser.
         Parser *parser = nullptr;
+        // The last parsed row.
+        vector_s row;
     };
 
 
@@ -275,14 +282,15 @@ public:
 
 
     // Begin and end iterators for the parser.
-    const IterStr source_begin;
-    const IterStr source_end;
+    IterStr source_begin;
+    IterStr source_end;
 
     // The parser object.
     Parser parser;
 
 
-    CSVParser(const IterStr &begin, const IterStr &end, std::string del = ",", char quote = '\"') : source_begin{begin}, source_end{end}, parser{begin, end, del, quote} {
+    CSVParser(const IterStr &begin, const IterStr &end, std::string del = ",", char quote = '\"') : source_begin{begin}, source_end{end},
+             parser{begin, end, del, quote} {
         // The CSVparser constructor. Takes begin and end std::string iterators, the field delimiter, and a character that will be used as a quote.
         // The delimiter can have a length of more than one character. The quote character can't be used into the delimiter.
         // Creates the parser.
@@ -295,7 +303,7 @@ public:
 
     Iterator begin() {
         // Resets the parser and returns an iterator to it.
-        parser.reset(source_begin, source_end);
+        parser.reset(source_begin);
         return Iterator(parser);
     }
 

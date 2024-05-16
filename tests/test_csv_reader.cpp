@@ -18,18 +18,6 @@ std::string file_path = __FILE__;
 std::string current_dir = file_path.substr(0, file_path.find_last_of("/\\"));
 
 
-void test_init_1() {
-    // Test of initialization.
-    CSVData data;
-    CSVReader reader(data, current_dir + "assets/file_1.csv", "|");
-
-    data.add_column("column 1").add_row({"row 1"});
-
-    if ((*reader.output)[0][0] != "row 1")
-        throw std::logic_error("\"output\" doesn't contain a pointer to the original CSVData object.");
-}
-
-
 void test_file_iterator() {
     // Test of the FileIterator work.
 
@@ -70,10 +58,50 @@ void test_file_iterator_with_parser() {
 
 
 void test_extract_header() {
-    // Test of the extract_header work.
+    // Does header get extracted correctly?
+    CSVData data;
+    CSVReader reader(data, current_dir + "/assets/file_3.csv", "|");
+    reader.close();
+
+    auto index = data.get_column_index();
+    if (index["first_name"] != 0 || index["middle_name"] != 1 || index["last_name"] != 2 || index.size() != 3)
+        throw std::logic_error("CSVReader doesn't read the header from a file properly.");
+}
 
 
+void test_read_all() {
+    // Test of the whole file read.
+    CSVData target;
+    target.add_column("first_name").add_column("middle_name").add_column("last_name");
+    target.add_row({{"Roxie", "Marcellus", "Marroguin"},
+                    {"Faith", "Bernard", "Millson"},
+                    {"Nina", "Christa", "Haddan"},
+                    {"Remedios", "Claretha", "Haddan"}});
 
+    CSVData output;
+    CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
+    reader.read_all();
+    // Reader doesn't need to be closed after the .read_all() call.
+
+    if (target != output)
+        throw std::logic_error("CSVReader doesn't read the file content properly.");
+}
+
+
+void test_read_line() {
+    // Test of the one line read.
+    CSVData target;
+    target.add_column("first_name").add_column("middle_name").add_column("last_name");
+    target.add_row({{"Roxie", "Marcellus", "Marroguin"},
+                    {"Faith", "Bernard", "Millson"}});
+
+    CSVData output;
+    CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
+    reader.read_line().read_line();
+    reader.close();
+
+    if (target != output)
+        throw std::logic_error("CSVReader doesn't read lines from a file properly.");
 }
 
 
@@ -82,13 +110,15 @@ void test_extract_header() {
 
 int main() {
 
-    test_init_1();
-
     test_extract_header();
 
     test_file_iterator();
 
     test_file_iterator_with_parser();
+
+    test_read_all();
+
+    test_read_line();
 
     return 0;
 }

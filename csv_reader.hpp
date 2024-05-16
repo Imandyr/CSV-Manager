@@ -12,7 +12,7 @@
 
 class CSVReader {
 // Reads a CSV file and extracts its data into the CSVData object.
-//
+// It reads file only once, so you must create a new instance to read it again.
 public:
 
     using vector_s = std::vector<std::string>;
@@ -30,7 +30,8 @@ public:
 
         FileIterator(std::ifstream& input) : input{&input} {
             // Creates a valid FileIterator object, that can be used to read lines.
-            ++*this;
+            if (input)
+                ++*this;
         }
         FileIterator() {
             // Creates an invalid FileIterator object, that only can be used on the right side of comparison with a valid FileIterator object.
@@ -74,69 +75,89 @@ public:
     };
 
 
-    // Pointer to the output CSVData object.
-    CSVData* output;
+    // Attributes and methods.
 
 
-    CSVReader(CSVData& output, std::string path, std::string sep = ",", vector_s columns = {}) :
-        output{&output}, path{path}, sep{sep}, columns{columns} {
+    // reference to the output CSVData object.
+    CSVData& output;
+
+
+    CSVReader(CSVData& output, std::string path, std::string sep = ",", char quote = '"', vector_s columns = {}) :
+        output{output}, path{path}, sep{sep}, quote{quote}, columns{columns}
+        {
         /* CSVReader constructor.
          * Arguments:
          *     output: The CSVData object in which data will be loaded. It'll be wiped out before reading started.
          *     path: Path to a CSV file from which the reader will read.
          *     sep: The separator used in this CSV file.
+         *     quote: The quote character.
          *     columns: Vector with columns of this CSV file. If empty, column information will be extracted from the first row.
          *              If specified, the first row will be read as common row.
          */
-        if (columns.size() == 0)
-            auto_columns = false;
+        output.clear();
+        extract_header();
     }
 
 
+    CSVReader& read_all() {
+        // Reads all the data from the file and inserts it into the output. Closes the file stream at the end.
+        while (parser_iter != parser_iter_end)
+            read_line();
+        close();
+        return *this;
+    }
 
 
+    CSVReader& read_line() {
+        // Parses one raw CSV data line into a vector and adds it to the CSVData.
+        auto row = *parser_iter++;
 
-    CSVData& read_all() {
-        // Reads all data from the file and inserts it into the output. Returns reference to the output object.
-        std::string line_buffer;
-        std::ifstream file(path);
+        row.resize(column_number, "");
+        output.add_row(row);
 
-        if (auto_columns) {
-            getline(file, line_buffer);
-            columns = extract_header(line_buffer);
-        }
+        return *this;
+    }
 
-        output->clear();
-        for (auto i : columns) output->add_column(i);
 
-        while (getline(file, line_buffer))
-            output->add_row(parse_line(line_buffer));
-
-        return *output;
+    CSVReader& close() {
+        // Closes input file stream.
+        file.close();
+        return *this;
     }
 
 
 private:
-    //
 
-    // Path to the file and the separator.
-    const std::string path, sep;
-    // Vector for manually entered columns names.
+    // Path to the file, the separator and the quote.
+    std::string path, sep;
+    char quote;
+
+    // Vector with columns names.
     vector_s columns;
-    // Should columns be extracted from the file?
-    bool auto_columns = true;
+    vector_s::size_type column_number;
+
+    // input file stream object.
+    std::ifstream file{path};
+
+    // input file stream iterator.
+    FileIterator file_iter{file}, file_iter_end;
+
+    // The parser object.
+    CSVParser<FileIterator> parser{file_iter, file_iter_end, sep, quote};
+
+    // Parser's iterators.
+    CSVParser<FileIterator>::Iterator parser_iter = parser.begin(), parser_iter_end = parser.end();
 
 
-    vector_s parse_line(std::string line) {
-        // Parses one raw CSV data line into a vector and returns it.
-        return {""};
-    }
+    void extract_header() {
+        // Parses the CSV file header and adds its fields as output columns.
+        if (columns.size() == 0)
+            columns = *parser_iter++;
 
+        for (std::string i : columns)
+            output.add_column(i);
 
-    // TO DO: Make it extract columns.
-    vector_s extract_header(std::string line) {
-        // Parses the CSV file header into the vector with column names and returns it.
-        return {""};
+        column_number = columns.size();
     }
 
 

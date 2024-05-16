@@ -34,8 +34,9 @@ void check_correctness(CSVParser<vector_s::iterator> &parser, const vector_v_s &
     // Method for comparison of the parser output and the correct one.
     vector_v_s output;
 
-    for (auto i : parser)
+    for (auto i : parser) {
         output.push_back(i);
+    }
 
     if (output != correct) {
 
@@ -239,6 +240,19 @@ void test_parser_reset() {
 }
 
 
+void test_unfinished_enclosure() {
+    // What happens when the last line doesn't close an opened quote?
+
+    vector_s input = {"\"first line ", "second line ", "third line"};
+    vector_v_s correct = {{"first line second line third line"}};
+
+    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+
+    check_correctness(parser, correct, "If an enclosure wasn't closed at the end, it still must be read as a row.");
+
+}
+
+
 int main() {
 
     test_init_1();
@@ -266,6 +280,8 @@ int main() {
     test_middle_quote();
 
     test_parser_reset();
+
+    test_unfinished_enclosure();
 
 
     return 0;

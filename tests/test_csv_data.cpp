@@ -27,7 +27,7 @@ void test_of_init_1() {
 
     CSVData data({{"message", 0}}, {{"text"}});
 
-    if ((data[0][0] != "text") || (data.column_index["message"] != 0))
+    if ((data[0][0] != "text") || (data.get_column_index()["message"] != 0))
         throw std::logic_error("Value was modified.");
 }
 
@@ -229,7 +229,7 @@ void test_add_column_1() {
 
     data.add_column("who", "123");
 
-    if (data.column_index["who"] != 1 || data[0] != CSVData::vector_s{"4", "123"})
+    if (data.get_column_index()["who"] != 1 || data[0] != CSVData::vector_s{"4", "123"})
         throw std::logic_error(".add_column() isn't working right.");
 
     bool bad = true;
@@ -251,7 +251,7 @@ void test_delete_column() {
     // print_2d(data);
 
     if (
-        data.column_index.find("thing") != data.column_index.end() ||
+        data.get_column_index().find("thing") != data.get_column_index().end() ||
         data[0][1] != "2" || data[0][2] != "4" || data[1][1] != "23" || data[1][2] != "54"
     ) throw std::logic_error(".delete_column() Doesn't delete things correctly.");
 

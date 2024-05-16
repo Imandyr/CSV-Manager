@@ -105,12 +105,6 @@ public:
     // CSVData class attributes and methods.
 
 
-    // Table with column names and thier indexes in vector.
-    u_map_s_st column_index;
-    // Vector with all data.
-    vector_v_s values;
-
-
     CSVData(const u_map_s_st& c_i = {}, const vector_v_s& v = {}) : column_index{c_i}, values{v} {
         // Initialization from column table and vector with values.
 
@@ -146,6 +140,22 @@ public:
     }
     index_type rows_number() {
         return values.size();
+    }
+
+
+    u_map_s_st& get_column_index() {
+        return column_index;
+    }
+    vector_v_s& get_values() {
+        return values;
+    }
+
+
+    bool operator==(CSVData &right) {
+        return values == right.values;
+    }
+    bool operator!=(CSVData &right) {
+        return values != right.values;
     }
 
 
@@ -289,7 +299,11 @@ public:
 
 private:
 
-    // Some hidden versions of methods.
+    // Table with column names and thier indexes in vector.
+    u_map_s_st column_index;
+    // Vector with all data.
+    vector_v_s values;
+
 
     void _add_column(std::string name, std::string value = "") {
         // Adds a new column and expands every row with the value.
