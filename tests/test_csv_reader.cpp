@@ -97,15 +97,57 @@ void test_read_line() {
 
     CSVData output;
     CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
-    reader.read_line().read_line();
-    reader.close();
+    reader.read_line().read_line().close();
 
     if (target != output)
         throw std::logic_error("CSVReader doesn't read lines from a file properly.");
 }
 
 
+void test_invalid_field_number() {
+    // It should work with rows that have less or more fields than in the header.
+    CSVData target;
+    target.add_column("first_name").add_column("middle_name").add_column("last_name");
+    target.add_row({{"Roxie", "Marcellus", ""},
+                    {"Faith", "", ""},
+                    {"Nina", "Christa", "Haddan"},
+                    {"Remedios", "Claretha", "Haddan"}});
 
+    CSVData output;
+    CSVReader reader(output, current_dir + "/assets/file_4.csv", "|");
+    reader.read_all();
+
+    if (target != output)
+        throw std::logic_error("CSVReader should add blank strings, if a row has fewer fields than the header, and cut excessive fields, if a row has more fields than in the header.");
+}
+
+
+void test_repeat_read_all() {
+    // .read_all() may be called only once.
+    CSVData output;
+    CSVReader reader(output, current_dir + "/assets/blank_1.csv");
+    reader.read_all();
+
+    try {
+        reader.read_all();
+        throw std::logic_error("The second call to .read_all() must throw an exception.");
+    }
+
+    catch (std::runtime_error) {}
+}
+
+
+void test_blank_file() {
+    // It should work fine with a blank file.
+    CSVData output;
+    output.add_column("text").add_row({"something"});
+
+    CSVReader reader(output, current_dir + "/assets/blank_1.csv");
+    reader.read_all();
+
+    if (CSVData() != output)
+        throw std::logic_error("A blank file must make blank CSVData.");
+}
 
 
 int main() {
@@ -119,6 +161,12 @@ int main() {
     test_read_all();
 
     test_read_line();
+
+    test_invalid_field_number();
+
+    test_repeat_read_all();
+
+    test_blank_file();
 
     return 0;
 }

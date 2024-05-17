@@ -280,10 +280,6 @@ void test_clear() {
 
     if (data.rows_number() != 0 || data.columns_number() != 0)
         throw std::logic_error(".clear() doesn't remove everything.");
-
-
-
-
 }
 
 

@@ -5,6 +5,7 @@
 
 
 #include <fstream>
+#include <stdexcept>
 
 #include "./csv_data.hpp"
 #include "./csv_parser.hpp"
@@ -101,9 +102,14 @@ public:
 
     CSVReader& read_all() {
         // Reads all the data from the file and inserts it into the output. Closes the file stream at the end.
-        while (parser_iter != parser_iter_end)
-            read_line();
-        close();
+        if (file.is_open()) {
+            while (parser_iter != parser_iter_end)
+                read_line();
+            close();
+        }
+        else
+            throw std::runtime_error("The file stream is closed.");
+
         return *this;
     }
 
@@ -161,11 +167,7 @@ private:
     }
 
 
-
-
-
 };
-
 
 
 
