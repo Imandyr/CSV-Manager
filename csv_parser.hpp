@@ -57,7 +57,7 @@ public:
 
 
         void reset(IterStr begin) {
-            // Resets parser with new iterator.
+            // Resets parser with a new iterator.
             source_begin = begin;
             ended = false;
         }
@@ -89,6 +89,9 @@ public:
                     row.push_back(buffer);
                     return;
                 }
+
+                // Adds "\r\n" to the buffer, if the end of a line is inside quotes.
+                buffer += "\r\n";
             }
 
             // If source_begin == source_end, then it is the end.

@@ -69,7 +69,7 @@ void test_parse_1() {
     // Test with some parsing cases.
 
     vector_s input = {"first<|>\"line", "second<|>line\"", "third<|>line<|>\"some\"\"<|>\"text"};
-    std::vector<vector_s> target = {{"first", "linesecond<|>line"}, {"third", "line", "some\"<|>text"}};
+    std::vector<vector_s> target = {{"first", "line\r\nsecond<|>line"}, {"third", "line", "some\"<|>text"}};
     std::vector<vector_s> out;
 
     CSVParser<vector_s::iterator> iter(input.begin(), input.end(), "<|>", '"');
@@ -146,7 +146,7 @@ void test_newlines() {
                       "7,,8,,9"};
     vector_v_s correct = {{"a", "b", "c"},
                           {"1", "2", "3,"},
-                          {"Once upon a time", "5", ",6"},
+                          {"Once upon \r\na time", "5", ",6"},
                           {"7", "8", "9"}};
 
     CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",,");
@@ -163,7 +163,7 @@ void test_quotes_and_newlines() {
                       "ha|",
                       "3,4"};
     vector_v_s correct = {{"a", "b"},
-                          {"1", "ha |ha| ha"},
+                          {"1", "ha \r\n|ha| \r\nha"},
                           {"3", "4"}};
 
     CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",", '|');
@@ -244,7 +244,7 @@ void test_unfinished_enclosure() {
     // What happens when the last line doesn't close an opened quote?
 
     vector_s input = {"\"first line ", "second line ", "third line"};
-    vector_v_s correct = {{"first line second line third line"}};
+    vector_v_s correct = {{"first line \r\nsecond line \r\nthird line\r\n"}};
 
     CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
