@@ -60,7 +60,8 @@ public:
             auto begin = iterable.begin(), end = iterable.end();
 
             // Encodes first iterable.
-            string += encode_field(*begin++);
+            if (begin != end)
+                string += encode_field(*begin++);
 
             // Encodes the rest.
             while (begin != end)

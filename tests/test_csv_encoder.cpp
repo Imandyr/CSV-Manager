@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include "../csv_encoder.hpp"
+#include "../csv_parser.hpp"
 
 
 using vector_s = std::vector<std::string>;
@@ -27,7 +28,7 @@ template <typename T> void print_2d(T seq) {
 }
 
 
-void check_correctness(CSVEncoder<vector_v_s::iterator> &encoder, const vector_s &correct,
+template <typename T> void check_correctness(CSVEncoder<T> &encoder, const vector_s &correct,
                        const std::string &message = "The encoder doesn't work right.") {
     // Method for comparison of the encoder output and the correct one.
     vector_s output;
@@ -78,20 +79,47 @@ void test_iter_postfix() {
 
 
 void test_empty_iterable() {
-    //
+    // If the iterable is empty.
+    vector_v_s source;
 
+    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
+
+    check_correctness(encoder, vector_s());
 }
 
 
 void test_empty_row() {
-    //
+    // If a row in the iterator is empty.
+    vector_v_s source = {{}};
+    vector_s target = {""};
 
+    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
+
+    check_correctness(encoder, target);
 }
 
 
 void test_empty_field() {
-    //
+    // If a field in a row is empty.
+    vector_v_s source = {{""}, {"", "", ""}};
+    vector_s target = {"", "||||"};
 
+    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end(), "||");
+
+    check_correctness(encoder, target);
+}
+
+
+void test_parser_and_encoder() {
+    // The encoder must be able to use parser as an iterator. But it may not produce the same output as was in input.
+    vector_s source = {"first<|>\"line", "second<|>line\"", "third<|>line<|>\"some\"\"<|>\"text"};
+    vector_s target = {"first<|>\"line\r\nsecond<|>line\"", "third<|>line<|>\"some\"\"<|>text\""};
+
+    CSVParser<vector_s::iterator> parser(source.begin(), source.end(), "<|>", '"');
+
+    CSVEncoder<CSVParser<vector_s::iterator>::Iterator> encoder(parser.begin(), parser.end(), "<|>", '"');
+
+    check_correctness(encoder, target);
 }
 
 
@@ -107,6 +135,8 @@ int main() {
     test_empty_row();
 
     test_empty_field();
+
+    test_parser_and_encoder();
 
     return 0;
 }
