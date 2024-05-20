@@ -9,7 +9,7 @@ do_test() {
 }
 
 
-tests="test_csv_data test_csv_reader test_csv_parser test_csv_encoder"
+tests="test_csv_data test_csv_reader test_csv_parser test_csv_encoder test_csv_writer"
 
 dir="$(dirname "$0")"
 TIMEFORMAT=%R

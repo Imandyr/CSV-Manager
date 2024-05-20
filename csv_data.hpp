@@ -6,7 +6,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <stdexcept>
 
 
@@ -22,7 +22,7 @@ public:
     using vector_s = std::vector<std::string>;
     using vector_v_s = std::vector<vector_s>;
     using index_type = vector_v_s::size_type;
-    using u_map_s_st = std::unordered_map<std::string, index_type>;
+    using map_s_i = std::map<std::string, index_type>;
 
 
     // Helper classes.
@@ -102,10 +102,61 @@ public:
     };
 
 
+    class ColumnNameIterator {
+    // Iterates names of columns.
+    public:
+        ColumnNameIterator(map_s_i::iterator column_iter) : column_iter{column_iter} {}
+
+        ColumnNameIterator& operator++() {
+            ++column_iter;
+            return *this;
+        }
+
+        ColumnNameIterator operator++(int) {
+            auto copy = *this;
+            ++column_iter;
+            return copy;
+        }
+
+        std::string operator*() {
+            return column_iter->first;
+        }
+
+        bool operator==(ColumnNameIterator right) {
+            return column_iter == right.column_iter;
+        }
+
+        bool operator!=(ColumnNameIterator right) {
+            return column_iter != right.column_iter;
+        }
+
+    private:
+        map_s_i::iterator column_iter;
+    };
+
+
+    class ColumnNameContainer {
+    // "Container" for column names.
+    public:
+        ColumnNameContainer(map_s_i column_index) : column_index{column_index} {}
+
+        ColumnNameIterator begin() {
+            return ColumnNameIterator(column_index.begin());
+        }
+
+        ColumnNameIterator end() {
+            return ColumnNameIterator(column_index.end());
+        }
+
+    private:
+        map_s_i column_index;
+    };
+
+
     // CSVData class attributes and methods.
 
 
-    CSVData(const u_map_s_st& c_i = {}, const vector_v_s& v = {}) : column_index{c_i}, values{v} {
+    CSVData(const map_s_i& c_i = {}, const vector_v_s& v = {}) : column_index{c_i}, values{v} {
         // Initialization from column table and vector with values.
 
         is_sequence_of_rows_valid(v);
@@ -135,7 +186,7 @@ public:
     }
 
 
-    u_map_s_st::size_type columns_number() {
+    map_s_i::size_type columns_number() {
         return column_index.size();
     }
     index_type rows_number() {
@@ -143,7 +194,7 @@ public:
     }
 
 
-    u_map_s_st& get_column_index() {
+    map_s_i& get_column_index() {
         return column_index;
     }
     vector_v_s& get_values() {
@@ -300,7 +351,7 @@ public:
 private:
 
     // Table with column names and thier indexes in vector.
-    u_map_s_st column_index;
+    map_s_i column_index;
     // Vector with all data.
     vector_v_s values;
 

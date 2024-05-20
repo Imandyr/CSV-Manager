@@ -33,7 +33,6 @@ void test_file_iterator() {
 
     if (target != output)
         throw std::logic_error("CSVReader::FileIterator doesn't read file correctly.");
-
 }
 
 
@@ -53,7 +52,6 @@ void test_file_iterator_with_parser() {
 
     if (target != output)
         throw std::logic_error("CSVReader::FileIterator doesn't work with CSVParser.");
-
 }
 
 
@@ -150,6 +148,24 @@ void test_blank_file() {
 }
 
 
+void test_fixed_columns() {
+    // CSVReader's columns can be specified manually.
+    CSVData output, target;
+    target.add_column("first").add_column("second");
+    target.add_row({{"first_name", "middle_name"},
+                    {"Roxie", "Marcellus"},
+                    {"Faith", ""},
+                    {"Nina", "Christa"},
+                    {"Remedios", "Claretha"}});
+
+    CSVReader reader(output, current_dir + "/assets/file_4.csv", "|", '"', {"first", "second"});
+    reader.read_all();
+
+    if (target != output)
+        throw std::logic_error("CSVReader's should work with manually specified columns.");
+}
+
+
 int main() {
 
     test_extract_header();
@@ -167,6 +183,8 @@ int main() {
     test_repeat_read_all();
 
     test_blank_file();
+
+    test_fixed_columns();
 
     return 0;
 }
