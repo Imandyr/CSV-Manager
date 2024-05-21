@@ -134,7 +134,7 @@ void test_add_row_1() {
 
     data.add_row(3);
 
-    if (data.rows_number() != 4)
+    if (data.row_number() != 4)
         throw std::logic_error(".add_row(3) hasn't added 3 rows.");
     if (data[0][0] != "1")
         throw std::logic_error(".add_row(3) changed first rows.");
@@ -154,7 +154,7 @@ void test_add_row_2() {
 
     data.add_row({"4", "3", "2", "1"}, 3);
 
-    if (data.rows_number() != 4)
+    if (data.row_number() != 4)
         throw std::logic_error(".add_row(number, row) hasn't added 3 rows.");
     if (data[0][0] != "1")
         throw std::logic_error(".add_row(number, row) changed first rows.");
@@ -273,13 +273,30 @@ void test_clear() {
     data.add_column("Name").add_column("Age").add_column("Gender");
     data.add_row({{"Grag", "32", "m"}, {"Jane", "21", "f"}});
 
-    if (data.rows_number() != 2 || data.columns_number() != 3)
+    if (data.row_number() != 2 || data.column_number() != 3)
         throw std::logic_error("Something wrong with other elements.");
 
     data.clear();
 
-    if (data.rows_number() != 0 || data.columns_number() != 0)
+    if (data.row_number() != 0 || data.column_number() != 0)
         throw std::logic_error(".clear() doesn't remove everything.");
+}
+
+
+void test_string_representation() {
+    // Is the string representation correct?
+    CSVData data({}, {}, " ", '"');
+    data.add_column("Name").add_column("Age").add_column("Gender");
+    data.add_row({{"Grag", "32\"", "m"}, {"Jane", "21 ", "f"}});
+
+    std::string target = "Name Age Gender\nGrag \"32\"\"\" m\nJane \"21 \" f\n";
+
+    std::string output = static_cast<std::string>(data);
+
+    if (target != output) {
+        std::cout << "Target:\n" << target << "Output:\n" << output;
+        throw std::logic_error("The string representation isn't correct.");
+    }
 }
 
 
@@ -308,6 +325,8 @@ int main() {
     test_delete_column();
 
     test_clear();
+
+    test_string_representation();
 
     return 0;
 }

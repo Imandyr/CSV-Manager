@@ -8,12 +8,13 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <algorithm>
 
-
+#include "./csv_encoder.hpp"
 
 
 class CSVData {
-/* Container of CSV data.
+/* Container of the CSV data.
  *
  */
 public:
@@ -22,7 +23,7 @@ public:
     using vector_s = std::vector<std::string>;
     using vector_v_s = std::vector<vector_s>;
     using index_type = vector_v_s::size_type;
-    using map_s_i = std::map<std::string, index_type>;
+    using map_s_i = std::map<std::string, index_type>; // TO DO: This thing should be ordered by values of keys.
 
 
     // Helper classes.
@@ -102,64 +103,24 @@ public:
     };
 
 
-    class ColumnNameIterator {
-    // Iterates names of columns.
-    public:
-        ColumnNameIterator(map_s_i::iterator column_iter) : column_iter{column_iter} {}
-
-        ColumnNameIterator& operator++() {
-            ++column_iter;
-            return *this;
-        }
-
-        ColumnNameIterator operator++(int) {
-            auto copy = *this;
-            ++column_iter;
-            return copy;
-        }
-
-        std::string operator*() {
-            return column_iter->first;
-        }
-
-        bool operator==(ColumnNameIterator right) {
-            return column_iter == right.column_iter;
-        }
-
-        bool operator!=(ColumnNameIterator right) {
-            return column_iter != right.column_iter;
-        }
-
-    private:
-        map_s_i::iterator column_iter;
-    };
-
-
-    class ColumnNameContainer {
-    // "Container" for column names.
-    public:
-        ColumnNameContainer(map_s_i column_index) : column_index{column_index} {}
-
-        ColumnNameIterator begin() {
-            return ColumnNameIterator(column_index.begin());
-        }
-
-        ColumnNameIterator end() {
-            return ColumnNameIterator(column_index.end());
-        }
-
-    private:
-        map_s_i column_index;
-    };
-
-
     // CSVData class attributes and methods.
 
 
-    CSVData(const map_s_i& c_i = {}, const vector_v_s& v = {}) : column_index{c_i}, values{v} {
-        // Initialization from column table and vector with values.
+    // The delimiter and quote for the string representation.
+    std::string delimiter;
+    char quote;
 
+
+    CSVData(const map_s_i& c_i = {}, const vector_v_s& v = {}, std::string delimiter = ",", char quote = '"') : delimiter{delimiter},
+           quote{quote}, column_index{c_i}, values{v} {
+        // Initialization from column table and vector with values.
         is_sequence_of_rows_valid(v);
+    }
+
+
+    static bool compair_columns(std::pair<std::string, index_type> &left, std::pair<std::string, index_type> &right) {
+        // Compares if the left columns stays before the right.
+        return left.second < right.second;
     }
 
 
@@ -186,10 +147,10 @@ public:
     }
 
 
-    map_s_i::size_type columns_number() {
+    map_s_i::size_type column_number() {
         return column_index.size();
     }
-    index_type rows_number() {
+    index_type row_number() {
         return values.size();
     }
 
@@ -207,6 +168,61 @@ public:
     }
     bool operator!=(CSVData &right) {
         return values != right.values;
+    }
+
+
+    vector_s get_column_names() {
+        // Returns vector with column names with a respect to their order.
+        std::vector<std::pair<std::string, index_type>> original(column_index.begin(), column_index.end());
+        std::sort(original.begin(), original.end(), compair_columns);
+
+        vector_s output;
+        for (auto i : original)
+            output.push_back(i.first);
+
+        return output;
+    }
+
+
+    std::string get_header_line(std::string delimiter, char quote) {
+        // Returns the header line.
+        vector_v_s h_iter_iter = {get_column_names()};
+        CSVEncoder<vector_v_s::iterator>::Encoder h_encoder(h_iter_iter.begin(), delimiter, quote);
+        return h_encoder.encode().string;
+    }
+
+    std::string get_header_line() {
+        return get_header_line(delimiter, quote);
+    }
+
+
+    CSVEncoder<vector_v_s::iterator> encode_content(std::string delimiter, char quote) {
+        // Creates CSVEncoder which encodes all the content of this CSVData.
+        return CSVEncoder<vector_v_s::iterator>(values.begin(), values.end(), delimiter, quote);
+    }
+
+    CSVEncoder<vector_v_s::iterator> encode_content() {
+        return encode_content(delimiter, quote);
+    }
+
+
+    operator std::string() {
+        // Creates string representation of the data.
+        std::string output;
+
+        output += get_header_line() + "\n";
+
+        for (auto i : encode_content())
+            output += i + "\n";
+
+        return output;
+    }
+
+
+    std::ostream& operator<<(std::ostream& os) {
+        // Writes its string representation to the output stream.
+        os << static_cast<std::string>(*this);
+        return os;
     }
 
 

@@ -13,8 +13,8 @@
 
 
 class CSVWriter {
-//
-//
+// Writer which writes content of the CSVData to the file.
+// Use .write_all() to write everything.
 //
 public:
 
@@ -25,7 +25,7 @@ public:
     CSVWriter(CSVData &input, std::string path, std::string delimiter = ",", char quote = '"') : input{input},
              path{path}, delimiter{delimiter}, quote{quote}, file{path} {
         // Initialization. Writes header.
-        file << get_header_line() + "\n";
+        file << input.get_header_line(delimiter, quote) + "\n";
     }
 
 
@@ -51,29 +51,13 @@ public:
     }
 
 
-
 private:
     // Attributes.
     CSVData &input;
     const std::string path, delimiter;
     const char quote;
     std::ofstream file;
-
-    CSVEncoder<CSVData::vector_v_s::iterator> encoder{input.begin(), input.end(), delimiter, quote};
-
-    void write_line(std::string line) {
-        // Writes line to file.
-        file << line + "\n";
-    }
-
-    std::string get_header_line() {
-        // Get the header line.
-        std::vector<CSVData::ColumnNameContainer> h_iter_iter = {input.get_column_index()};
-        CSVEncoder<std::vector<CSVData::ColumnNameContainer>::iterator>::Encoder h_encoder(h_iter_iter.begin(), delimiter, quote);
-        return h_encoder.encode().string;
-    }
-
-
+    CSVEncoder<CSVData::vector_v_s::iterator> encoder = input.encode_content(delimiter, quote);
 };
 
 
