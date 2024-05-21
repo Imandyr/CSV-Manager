@@ -29,7 +29,7 @@ template <typename T> void print_2d(T seq) {
 }
 
 
-void check_correctness(CSVParser<vector_s::iterator> &parser, const vector_v_s &correct,
+void check_correctness(csvm::CSVParser<vector_s::iterator> &parser, const vector_v_s &correct,
                        const std::string &message = "The parser doesn't work right.") {
     // Method for comparison of the parser output and the correct one.
     vector_v_s output;
@@ -57,7 +57,7 @@ void test_init_1() {
     vector_s input;
     bool bad = true;
 
-    try {CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|\"'", '\"');}
+    try {csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|\"'", '\"');}
     catch (std::invalid_argument) {bad = false;}
 
     if (bad)
@@ -72,7 +72,7 @@ void test_parse_1() {
     std::vector<vector_s> target = {{"first", "line\r\nsecond<|>line"}, {"third", "line", "some\"<|>text"}};
     std::vector<vector_s> out;
 
-    CSVParser<vector_s::iterator> iter(input.begin(), input.end(), "<|>", '"');
+    csvm::CSVParser<vector_s::iterator> iter(input.begin(), input.end(), "<|>", '"');
 
     check_correctness(iter, target);
 }
@@ -86,7 +86,7 @@ void test_comma_in_quotes() {
     vector_v_s correct = {{"first", "last", "address", "city", "zip"},
                           {"John", "Doe", "120 any st.", "Anytown, WW", "08123", "what is,,,,the problem?"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
     check_correctness(parser, correct, "The parser mustn't delimit text in quotes.");
 }
@@ -102,7 +102,7 @@ void test_empty() {
                           {"1", "", ""},
                           {"2", "3", "4"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
     check_correctness(parser, correct, "The parser doesn't work right with empty fields.");
 }
@@ -118,7 +118,7 @@ void test_escaped_quotes() {
                           {"1", "ha 'ha' ha"},
                           {"3", "4"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",", '\'');
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",", '\'');
 
     check_correctness(parser, correct, "Quotes aren't escaped correctly.");
 }
@@ -131,7 +131,7 @@ void test_json() {
     vector_v_s correct = {{"key", "val"},
                           {"1", "{\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
     check_correctness(parser, correct);
 }
@@ -149,7 +149,7 @@ void test_newlines() {
                           {"Once upon \r\na time", "5", ",6"},
                           {"7", "8", "9"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",,");
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",,");
 
     check_correctness(parser, correct);
 }
@@ -166,7 +166,7 @@ void test_quotes_and_newlines() {
                           {"1", "ha \r\n|ha| \r\nha"},
                           {"3", "4"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",", '|');
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), ",", '|');
 
     check_correctness(parser, correct);
 }
@@ -179,7 +179,7 @@ void test_simple() {
     vector_v_s correct = {{"a", "b", "c"},
                           {"1", "2", "3"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "jfirt");
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "jfirt");
 
     check_correctness(parser, correct);
 }
@@ -194,7 +194,7 @@ void test_utf_8() {
                           {"1", "2", "3"},
                           {"4", "5", "ʤ"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
     check_correctness(parser, correct);
 }
@@ -205,7 +205,7 @@ void test_delimeter_end() {
     vector_s input = {"||", "|"};
     vector_v_s correct = {{"", "", ""}, {"", ""}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|");
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|");
 
     check_correctness(parser, correct);
 
@@ -218,7 +218,7 @@ void test_middle_quote() {
     vector_s input = {"\"enclosed\"|not \"enclosed\""};
     vector_v_s correct = {{"enclosed", "not \"enclosed\""}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|");
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end(), "|");
 
     check_correctness(parser, correct, "A quote that isn't first character doesn't work as the start of an enclosure.");
 
@@ -231,7 +231,7 @@ void test_parser_reset() {
     vector_s input = {"1,2,3"};
     vector_v_s correct = {{"1", "2", "3"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
     check_correctness(parser, correct, "The first iteration should work correctly.");
     check_correctness(parser, correct, "The second iteration should work correctly.");
@@ -246,7 +246,7 @@ void test_unfinished_enclosure() {
     vector_s input = {"\"first line ", "second line ", "third line"};
     vector_v_s correct = {{"first line \r\nsecond line \r\nthird line\r\n"}};
 
-    CSVParser<vector_s::iterator> parser(input.begin(), input.end());
+    csvm::CSVParser<vector_s::iterator> parser(input.begin(), input.end());
 
     check_correctness(parser, correct, "If an enclosure wasn't closed at the end, it still must be read as a row.");
 

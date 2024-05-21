@@ -11,6 +11,9 @@
 #include "./csv_parser.hpp"
 
 
+namespace csvm {
+
+
 class CSVReader {
 // Reads a CSV file and extracts its data into the CSVData object.
 // It reads file only once, so you must create a new instance to read it again.
@@ -170,7 +173,7 @@ private:
 };
 
 
-
+}
 
 
 #endif

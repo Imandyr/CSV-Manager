@@ -12,6 +12,9 @@
 #include "./csv_data.hpp"
 
 
+namespace csvm {
+
+
 class CSVWriter {
 // Writer which writes content of the CSVData to the file.
 // Use .write_all() to write everything.
@@ -59,6 +62,9 @@ private:
     std::ofstream file;
     CSVEncoder<CSVData::vector_v_s::iterator> encoder = input.encode_content(delimiter, quote);
 };
+
+
+}
 
 
 #endif

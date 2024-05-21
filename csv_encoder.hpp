@@ -9,6 +9,9 @@
 #include <stdexcept>
 
 
+namespace csvm {
+
+
 template <typename IterIterStr> class CSVEncoder {
 /* Encodes strings from the iterable of iterables into the CSV format strings.
  * On construction, takes begin and end streams, delimiter string and quote character.
@@ -193,7 +196,7 @@ private:
 };
 
 
-
+}
 
 
 

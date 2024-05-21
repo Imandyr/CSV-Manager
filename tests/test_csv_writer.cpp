@@ -23,14 +23,14 @@ void test_write_all_1() {
     // It should write all the data from the CSVData into the file.
     std::string path = current_dir + "/assets/written_1.csv";
 
-    CSVData data, output;
+    csvm::CSVData data, output;
     data.add_column("Thing_1").add_column("Thing_2");
     data.add_row({{"Field_1", "Field_2"}, {"Field_3", "Field_4"}});
 
-    CSVWriter writer(data, path, "|", '"');
+    csvm::CSVWriter writer(data, path, "|", '"');
     writer.write_all();
 
-    CSVReader reader(output, path, "|", '"');
+    csvm::CSVReader reader(output, path, "|", '"');
     reader.read_all();
 
     if (output != data)

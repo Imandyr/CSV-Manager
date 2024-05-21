@@ -28,7 +28,7 @@ template <typename T> void print_2d(T seq) {
 }
 
 
-template <typename T> void check_correctness(CSVEncoder<T> &encoder, const vector_s &correct,
+template <typename T> void check_correctness(csvm::CSVEncoder<T> &encoder, const vector_s &correct,
                        const std::string &message = "The encoder doesn't work right.") {
     // Method for comparison of the encoder output and the correct one.
     vector_s output;
@@ -56,7 +56,7 @@ void test_simple_1() {
     vector_v_s source = {{"val_1<|>", "\"val_2", "val\n3"}, {"v\ral_4", "val_5", "val_6"}};
     vector_s correct = {"\"val_1<|>\"<|>\"\"\"val_2\"<|>\"val\n3\"", "\"v\ral_4\"<|>val_5<|>val_6"};
 
-   CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end(), "<|>");
+   csvm::CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end(), "<|>");
 
    check_correctness(encoder, correct);
 }
@@ -66,7 +66,7 @@ void test_iter_postfix() {
     // Does it hold the previous value?
     vector_v_s source = {{"First"}, {"Second"}};
 
-    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
+    csvm::CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
 
     auto begin = encoder.begin();
     auto begin_prev = begin++;
@@ -82,7 +82,7 @@ void test_empty_iterable() {
     // If the iterable is empty.
     vector_v_s source;
 
-    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
+    csvm::CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
 
     check_correctness(encoder, vector_s());
 }
@@ -93,7 +93,7 @@ void test_empty_row() {
     vector_v_s source = {{}};
     vector_s target = {""};
 
-    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
+    csvm::CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end());
 
     check_correctness(encoder, target);
 }
@@ -104,7 +104,7 @@ void test_empty_field() {
     vector_v_s source = {{""}, {"", "", ""}};
     vector_s target = {"", "||||"};
 
-    CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end(), "||");
+    csvm::CSVEncoder<vector_v_s::iterator> encoder(source.begin(), source.end(), "||");
 
     check_correctness(encoder, target);
 }
@@ -115,9 +115,9 @@ void test_parser_and_encoder() {
     vector_s source = {"first<|>\"line", "second<|>line\"", "third<|>line<|>\"some\"\"<|>\"text"};
     vector_s target = {"first<|>\"line\r\nsecond<|>line\"", "third<|>line<|>\"some\"\"<|>text\""};
 
-    CSVParser<vector_s::iterator> parser(source.begin(), source.end(), "<|>", '"');
+    csvm::CSVParser<vector_s::iterator> parser(source.begin(), source.end(), "<|>", '"');
 
-    CSVEncoder<CSVParser<vector_s::iterator>::Iterator> encoder(parser.begin(), parser.end(), "<|>", '"');
+    csvm::CSVEncoder<csvm::CSVParser<vector_s::iterator>::Iterator> encoder(parser.begin(), parser.end(), "<|>", '"');
 
     check_correctness(encoder, target);
 }

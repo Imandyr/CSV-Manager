@@ -26,7 +26,7 @@ void test_file_iterator() {
 
     std::ifstream file(current_dir + "/assets/file_2.csv");
 
-    for (CSVReader::FileIterator begin(file), end; begin != end; ++begin)
+    for (csvm::CSVReader::FileIterator begin(file), end; begin != end; ++begin)
         output.push_back(*begin);
 
     file.close();
@@ -44,8 +44,8 @@ void test_file_iterator_with_parser() {
 
     std::ifstream file(current_dir + "/assets/file_2.csv");
 
-    CSVReader::FileIterator begin(file), end;
-    for (auto i : CSVParser<CSVReader::FileIterator>(begin, end, " "))
+    csvm::CSVReader::FileIterator begin(file), end;
+    for (auto i : csvm::CSVParser<csvm::CSVReader::FileIterator>(begin, end, " "))
         output.push_back(i);
 
     file.close();
@@ -57,8 +57,8 @@ void test_file_iterator_with_parser() {
 
 void test_extract_header() {
     // Does header get extracted correctly?
-    CSVData data;
-    CSVReader reader(data, current_dir + "/assets/file_3.csv", "|");
+    csvm::CSVData data;
+    csvm::CSVReader reader(data, current_dir + "/assets/file_3.csv", "|");
     reader.close();
 
     auto index = data.get_column_index();
@@ -69,15 +69,15 @@ void test_extract_header() {
 
 void test_read_all() {
     // Test of the whole file read.
-    CSVData target;
+    csvm::CSVData target;
     target.add_column("first_name").add_column("middle_name").add_column("last_name");
     target.add_row({{"Roxie", "Marcellus", "Marroguin"},
                     {"Faith", "Bernard", "Millson"},
                     {"Nina", "Christa", "Haddan"},
                     {"Remedios", "Claretha", "Haddan"}});
 
-    CSVData output;
-    CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
+    csvm::CSVData output;
+    csvm::CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
     reader.read_all();
     // Reader doesn't need to be closed after the .read_all() call.
 
@@ -88,13 +88,13 @@ void test_read_all() {
 
 void test_read_line() {
     // Test of the one line read.
-    CSVData target;
+    csvm::CSVData target;
     target.add_column("first_name").add_column("middle_name").add_column("last_name");
     target.add_row({{"Roxie", "Marcellus", "Marroguin"},
                     {"Faith", "Bernard", "Millson"}});
 
-    CSVData output;
-    CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
+    csvm::CSVData output;
+    csvm::CSVReader reader(output, current_dir + "/assets/file_3.csv", "|");
     reader.read_line().read_line().close();
 
     if (target != output)
@@ -104,15 +104,15 @@ void test_read_line() {
 
 void test_invalid_field_number() {
     // It should work with rows that have less or more fields than in the header.
-    CSVData target;
+    csvm::CSVData target;
     target.add_column("first_name").add_column("middle_name").add_column("last_name");
     target.add_row({{"Roxie", "Marcellus", ""},
                     {"Faith", "", ""},
                     {"Nina", "Christa", "Haddan"},
                     {"Remedios", "Claretha", "Haddan"}});
 
-    CSVData output;
-    CSVReader reader(output, current_dir + "/assets/file_4.csv", "|");
+    csvm::CSVData output;
+    csvm::CSVReader reader(output, current_dir + "/assets/file_4.csv", "|");
     reader.read_all();
 
     if (target != output)
@@ -122,8 +122,8 @@ void test_invalid_field_number() {
 
 void test_repeat_read_all() {
     // .read_all() may be called only once.
-    CSVData output;
-    CSVReader reader(output, current_dir + "/assets/blank_1.csv");
+    csvm::CSVData output;
+    csvm::CSVReader reader(output, current_dir + "/assets/blank_1.csv");
     reader.read_all();
 
     try {
@@ -137,20 +137,20 @@ void test_repeat_read_all() {
 
 void test_blank_file() {
     // It should work fine with a blank file.
-    CSVData output;
+    csvm::CSVData output;
     output.add_column("text").add_row({"something"});
 
-    CSVReader reader(output, current_dir + "/assets/blank_1.csv");
+    csvm::CSVReader reader(output, current_dir + "/assets/blank_1.csv");
     reader.read_all();
 
-    if (CSVData() != output)
+    if (csvm::CSVData() != output)
         throw std::logic_error("A blank file must make blank CSVData.");
 }
 
 
 void test_fixed_columns() {
     // CSVReader's columns can be specified manually.
-    CSVData output, target;
+    csvm::CSVData output, target;
     target.add_column("first").add_column("second");
     target.add_row({{"first_name", "middle_name"},
                     {"Roxie", "Marcellus"},
@@ -158,7 +158,7 @@ void test_fixed_columns() {
                     {"Nina", "Christa"},
                     {"Remedios", "Claretha"}});
 
-    CSVReader reader(output, current_dir + "/assets/file_4.csv", "|", '"', {"first", "second"});
+    csvm::CSVReader reader(output, current_dir + "/assets/file_4.csv", "|", '"', {"first", "second"});
     reader.read_all();
 
     if (target != output)

@@ -13,6 +13,9 @@
 #include "./csv_encoder.hpp"
 
 
+namespace csvm {
+
+
 class CSVData {
 /* Container of the CSV data.
  *
@@ -421,8 +424,7 @@ private:
 };
 
 
-
-
+}
 
 
 #endif

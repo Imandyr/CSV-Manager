@@ -9,6 +9,9 @@
 #include <stdexcept>
 
 
+namespace csvm {
+
+
 template <typename IterStr> class CSVParser {
 /* CSVParser returns Iterator from the .begin() and .end(), which uses internal Parser object, which parses lines from the IterStr iterator,
  * and yield one parsed CSV row content as std::vector<std::string> on each iteration.
@@ -323,6 +326,7 @@ private:
 };
 
 
+}
 
 
 #endif
